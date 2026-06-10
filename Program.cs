@@ -142,7 +142,7 @@ namespace GrafikaSzeminarium
             if (keyboard.IsKeyPressed(Key.S))
                 movement.Z += playerSpeed;
 
-            // A/D: balra-jobbra
+            // A/D: oldalirányú mozgás (nem forgatjuk)
             if (keyboard.IsKeyPressed(Key.A))
                 movement.X -= playerSpeed;
 
@@ -156,6 +156,7 @@ namespace GrafikaSzeminarium
             if (keyboard.IsKeyPressed(Key.E))
                 movement.Y -= playerSpeed;
 
+            // Pozíció frissítése
             if (movement.X != 0f || movement.Y != 0f || movement.Z != 0f)
             {
                 playerPosition += movement;
@@ -163,12 +164,12 @@ namespace GrafikaSzeminarium
                 playerPosition.X = Math.Clamp(playerPosition.X, -85f, 85f);
                 playerPosition.Y = Math.Clamp(playerPosition.Y, -35f, 35f);
                 playerPosition.Z = Math.Clamp(playerPosition.Z, -90f, 30f);
+            }
 
-                // Csak akkor forgatjuk, ha vízszintesen mozogsz
-                if (movement.X != 0f || movement.Z != 0f)
-                {
-                    playerRotationY = MathF.Atan2(movement.X, movement.Z);
-                }
+            // Rakéta forgatás R gomb lenyomására
+            if (keyboard.IsKeyPressed(Key.R))
+            {
+                playerRotationY += 0.05f;
             }
         }
         //private static void MovePlayer(IKeyboard keyboard)
@@ -398,18 +399,14 @@ namespace GrafikaSzeminarium
 
 
             ImGui.Text("Controls:");
-
             ImGui.Separator();
 
-            ImGui.Text("W - forward");
-            ImGui.Text("S - backward");
-            ImGui.Text("A - left");
-            ImGui.Text("D - right");
-            ImGui.Text("Q - up");
-            ImGui.Text("E - down");
-
-            ImGui.Text("SPACE - shoot");
-            ImGui.Text("C - switch camera");
+            ImGui.BulletText("W / S - Forward / Backward");
+            ImGui.BulletText("A / D - Left / Right");
+            ImGui.BulletText("Q / E - Up / Down");
+            ImGui.BulletText("R - Rotate spaceship");
+            ImGui.BulletText("SPACE - Shoot");
+            ImGui.BulletText("C - Switch camera");
             ImGui.Checkbox("Rocket camera", ref firstPersonView);
             ImGui.SliderFloat("Rocket speed", ref playerSpeed, 0.1f, 1.2f);
 

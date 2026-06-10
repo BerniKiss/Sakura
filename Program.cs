@@ -388,8 +388,19 @@ namespace GrafikaSzeminarium
             ImGui.Text($"Destroyed Asteroids: {destroyedCount}");
             ImGui.Text($"Bullets: {bulletPositions.Count}");
             ImGui.Separator();
+
+
             ImGui.Text("Controls:");
-            ImGui.Text("W A S D - move");
+
+            ImGui.Separator();
+
+            ImGui.Text("W - forward");
+            ImGui.Text("S - backward");
+            ImGui.Text("A - left");
+            ImGui.Text("D - right");
+            ImGui.Text("Q - up");
+            ImGui.Text("E - down");
+
             ImGui.Text("SPACE - shoot");
             ImGui.Text("C - switch camera");
             ImGui.Checkbox("Rocket camera", ref firstPersonView);

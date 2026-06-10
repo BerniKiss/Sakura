@@ -135,12 +135,28 @@ namespace GrafikaSzeminarium
         {
             Vector3D<float> movement = Vector3D<float>.Zero;
 
-            if (keyboard.IsKeyPressed(Key.W)) movement.Z -= playerSpeed;
-            if (keyboard.IsKeyPressed(Key.S)) movement.Z += playerSpeed;
-            if (keyboard.IsKeyPressed(Key.A)) movement.X -= playerSpeed;
-            if (keyboard.IsKeyPressed(Key.D)) movement.X += playerSpeed;
+            // W/S: előre-hátra
+            if (keyboard.IsKeyPressed(Key.W))
+                movement.Z -= playerSpeed;
 
-            if (movement.X != 0f || movement.Z != 0f)
+            if (keyboard.IsKeyPressed(Key.S))
+                movement.Z += playerSpeed;
+
+            // A/D: balra-jobbra
+            if (keyboard.IsKeyPressed(Key.A))
+                movement.X -= playerSpeed;
+
+            if (keyboard.IsKeyPressed(Key.D))
+                movement.X += playerSpeed;
+
+            // Q/E: fel-le
+            if (keyboard.IsKeyPressed(Key.Q))
+                movement.Y += playerSpeed;
+
+            if (keyboard.IsKeyPressed(Key.E))
+                movement.Y -= playerSpeed;
+
+            if (movement.X != 0f || movement.Y != 0f || movement.Z != 0f)
             {
                 playerPosition += movement;
 
@@ -148,9 +164,33 @@ namespace GrafikaSzeminarium
                 playerPosition.Y = Math.Clamp(playerPosition.Y, -35f, 35f);
                 playerPosition.Z = Math.Clamp(playerPosition.Z, -90f, 30f);
 
-                playerRotationY = MathF.Atan2(movement.X, movement.Z);
+                // Csak akkor forgatjuk, ha vízszintesen mozogsz
+                if (movement.X != 0f || movement.Z != 0f)
+                {
+                    playerRotationY = MathF.Atan2(movement.X, movement.Z);
+                }
             }
         }
+        //private static void MovePlayer(IKeyboard keyboard)
+        //{
+        //    Vector3D<float> movement = Vector3D<float>.Zero;
+
+        //    if (keyboard.IsKeyPressed(Key.W)) movement.Z -= playerSpeed;
+        //    if (keyboard.IsKeyPressed(Key.S)) movement.Z += playerSpeed;
+        //    if (keyboard.IsKeyPressed(Key.A)) movement.X -= playerSpeed;
+        //    if (keyboard.IsKeyPressed(Key.D)) movement.X += playerSpeed;
+
+        //    if (movement.X != 0f || movement.Z != 0f)
+        //    {
+        //        playerPosition += movement;
+
+        //        playerPosition.X = Math.Clamp(playerPosition.X, -85f, 85f);
+        //        playerPosition.Y = Math.Clamp(playerPosition.Y, -35f, 35f);
+        //        playerPosition.Z = Math.Clamp(playerPosition.Z, -90f, 30f);
+
+        //        playerRotationY = MathF.Atan2(movement.X, movement.Z);
+        //    }
+        //}
 
         private static void ShootBullet()
         {

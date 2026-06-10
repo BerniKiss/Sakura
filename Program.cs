@@ -28,7 +28,7 @@ namespace GrafikaSzeminarium
         private static float playerRotationY = 0f;
         private static float playerSpeed = 0.3f;
 
-        private const int AsteroidCount = 20;
+        private const int AsteroidCount = 60;
         private static Vector3D<float>[] asteroidPositions = new Vector3D<float>[AsteroidCount];
         private static float[] asteroidSpeeds = new float[AsteroidCount];
         private static bool[] asteroidDestroyed = new bool[AsteroidCount];
@@ -156,12 +156,12 @@ namespace GrafikaSzeminarium
             for (int i = 0; i < AsteroidCount; i++)
             {
                 asteroidPositions[i] = new Vector3D<float>(
-                    random.Next(-45, 45),
-                    random.Next(-15, 15),
-                    random.Next(-80, -10)
+                    random.Next(-80, 80),
+                    random.Next(-35, 35),
+                    random.Next(-120, 20)
                 );
 
-                asteroidSpeeds[i] = 2f + (float)random.NextDouble() * 4f;
+                asteroidSpeeds[i] = 1f + (float)random.NextDouble() * 3f;
                 asteroidDestroyed[i] = false;
             }
         }
@@ -182,9 +182,9 @@ namespace GrafikaSzeminarium
         private static void ResetAsteroid(int index)
         {
             asteroidPositions[index] = new Vector3D<float>(
-                random.Next(-45, 45),
-                random.Next(-15, 15),
-                random.Next(-80, -10)
+                random.Next(-80, 80),
+                random.Next(-35, 35),
+                random.Next(-120, -20)
             );
 
             asteroidDestroyed[index] = false;
@@ -226,7 +226,7 @@ namespace GrafikaSzeminarium
                 if (asteroidDestroyed[i]) continue;
 
                 Matrix4X4<float> model =
-                    Matrix4X4.CreateScale(4f) *
+                    Matrix4X4.CreateScale(5f) *
                     Matrix4X4.CreateRotationY(sceneTime + i) *
                     Matrix4X4.CreateTranslation(asteroidPositions[i]);
 

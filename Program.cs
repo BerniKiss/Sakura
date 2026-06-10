@@ -243,15 +243,22 @@ namespace GrafikaSzeminarium
         {
             if (firstPersonView)
             {
-                Vector3D<float> eye = playerPosition + new Vector3D<float>(0f, 2.2f, 0f);
+                // kamera kisse hatrebb es feljebb
+                Vector3D<float> offset = new Vector3D<float>(0f, 3f, -6f);
+                Vector3D<float> eye = playerPosition + offset;
 
                 cameraDescriptor.setCameraPosition(eye);
+
+                // A  forgas
                 cameraDescriptor.Yaw = playerRotationY * 180f / MathF.PI - 90f;
-                cameraDescriptor.Pitch = 0f;
+                cameraDescriptor.Pitch = -5f;
             }
             else
             {
-                cameraDescriptor.setCameraPosition(playerPosition + new Vector3D<float>(0f, 15f, 40f));
+                // harmadi kszemely kamera mogul es fentrol
+                Vector3D<float> eye = playerPosition + new Vector3D<float>(0f, 15f, 40f);
+                cameraDescriptor.setCameraPosition(eye);
+
                 cameraDescriptor.Yaw = -90f;
                 cameraDescriptor.Pitch = -20f;
             }

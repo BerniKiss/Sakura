@@ -39,7 +39,7 @@ namespace GrafikaSzeminarium
 
         private static float bulletSpeed = 45f;
         private static float bulletMaxDistance = 170f;
-        private static float bulletHitRadius = 6f;
+        private static float bulletHitRadius = 10f;
 
         private static Random random = new Random();
         private static bool firstPersonView = false;
@@ -212,7 +212,10 @@ namespace GrafikaSzeminarium
         {
             for (int i = bulletPositions.Count - 1; i >= 0; i--)
             {
-                bulletPositions[i] += bulletDirections[i] * bulletSpeed * deltaTime;
+                Vector3D<float> oldPosition = bulletPositions[i];
+                Vector3D<float> newPosition = oldPosition + bulletDirections[i] * bulletSpeed * deltaTime;
+
+                bulletPositions[i] = newPosition;
 
                 if (CalculateDistance(playerPosition, bulletPositions[i]) > bulletMaxDistance)
                 {
@@ -225,7 +228,11 @@ namespace GrafikaSzeminarium
                 {
                     if (asteroidDestroyed[j]) continue;
 
-                    float distance = CalculateDistance(bulletPositions[i], asteroidPositions[j]);
+                    float distance = DistancePointToSegment(
+                        asteroidPositions[j],
+                        oldPosition,
+                        newPosition
+                    );
 
                     if (distance < bulletHitRadius)
                     {
@@ -238,6 +245,35 @@ namespace GrafikaSzeminarium
                     }
                 }
             }
+        }
+
+        private static float DistancePointToSegment(
+    Vector3D<float> point,
+    Vector3D<float> segmentStart,
+    Vector3D<float> segmentEnd)
+        {
+            Vector3D<float> segment = segmentEnd - segmentStart;
+            Vector3D<float> toPoint = point - segmentStart;
+
+            float segmentLengthSquared =
+                segment.X * segment.X +
+                segment.Y * segment.Y +
+                segment.Z * segment.Z;
+
+            if (segmentLengthSquared == 0f)
+                return CalculateDistance(point, segmentStart);
+
+            float t =
+                (toPoint.X * segment.X +
+                 toPoint.Y * segment.Y +
+                 toPoint.Z * segment.Z) / segmentLengthSquared;
+
+            t = Math.Clamp(t, 0f, 1f);
+
+            Vector3D<float> closestPoint =
+                segmentStart + segment * t;
+
+            return CalculateDistance(point, closestPoint);
         }
 
         private static void UpdateCamera()

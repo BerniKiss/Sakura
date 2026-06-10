@@ -5,6 +5,7 @@ using Silk.NET.OpenGL;
 using Silk.NET.OpenGL.Extensions.ImGui;
 using Silk.NET.Windowing;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace GrafikaSzeminarium
@@ -25,13 +26,20 @@ namespace GrafikaSzeminarium
         private static GlObject asteroid;
 
         private static Vector3D<float> playerPosition = new Vector3D<float>(0f, 0f, 0f);
-        private static float playerRotationY = 0f;
-        private static float playerSpeed = 0.3f;
+        private static float playerRotationY = MathF.PI;
+        private static float playerSpeed = 0.45f;
 
         private const int AsteroidCount = 60;
         private static Vector3D<float>[] asteroidPositions = new Vector3D<float>[AsteroidCount];
         private static float[] asteroidSpeeds = new float[AsteroidCount];
         private static bool[] asteroidDestroyed = new bool[AsteroidCount];
+
+        private static List<Vector3D<float>> bulletPositions = new List<Vector3D<float>>();
+        private static List<Vector3D<float>> bulletDirections = new List<Vector3D<float>>();
+
+        private static float bulletSpeed = 45f;
+        private static float bulletMaxDistance = 170f;
+        private static float bulletHitRadius = 6f;
 
         private static Random random = new Random();
         private static bool firstPersonView = false;
@@ -49,6 +57,7 @@ namespace GrafikaSzeminarium
             WindowOptions windowOptions = WindowOptions.Default;
             windowOptions.Title = "Space Shooter";
             windowOptions.Size = new Vector2D<int>(1600, 900);
+            windowOptions.PreferredDepthBufferBits = 24;
 
             window = Window.Create(windowOptions);
 
@@ -63,6 +72,7 @@ namespace GrafikaSzeminarium
         private static void Window_Load()
         {
             inputContext = window.CreateInput();
+
             foreach (var keyboard in inputContext.Keyboards)
                 keyboard.KeyDown += Keyboard_KeyDown;
 
@@ -84,15 +94,19 @@ namespace GrafikaSzeminarium
         {
             if (key == Key.C)
                 firstPersonView = !firstPersonView;
+
+            if (key == Key.Space)
+                ShootBullet();
         }
 
         private static void Window_Update(double deltaTime)
         {
             var keyboard = inputContext.Keyboards[0];
 
-            MovePlayer(keyboard, (float)deltaTime);
+            MovePlayer(keyboard);
             UpdateAsteroids((float)deltaTime);
-            CheckCollisions();
+            UpdateBullets((float)deltaTime);
+            CheckPlayerAsteroidCollision();
             UpdateCamera();
 
             controller.Update((float)deltaTime);
@@ -110,13 +124,14 @@ namespace GrafikaSzeminarium
 
             DrawSkyBox();
             DrawAsteroids();
+            DrawBullets();
             DrawPlayer();
             DrawGui();
 
             controller.Render();
         }
 
-        private static void MovePlayer(IKeyboard keyboard, float deltaTime)
+        private static void MovePlayer(IKeyboard keyboard)
         {
             Vector3D<float> movement = Vector3D<float>.Zero;
 
@@ -128,7 +143,59 @@ namespace GrafikaSzeminarium
             if (movement.X != 0f || movement.Z != 0f)
             {
                 playerPosition += movement;
+
+                playerPosition.X = Math.Clamp(playerPosition.X, -85f, 85f);
+                playerPosition.Y = Math.Clamp(playerPosition.Y, -35f, 35f);
+                playerPosition.Z = Math.Clamp(playerPosition.Z, -90f, 30f);
+
                 playerRotationY = MathF.Atan2(movement.X, movement.Z);
+            }
+        }
+
+        private static void ShootBullet()
+        {
+            Vector3D<float> direction = new Vector3D<float>(
+                MathF.Sin(playerRotationY),
+                0f,
+                MathF.Cos(playerRotationY)
+            );
+
+            Vector3D<float> startPosition =
+                playerPosition + direction * 5f + new Vector3D<float>(0f, 0.3f, 0f);
+
+            bulletPositions.Add(startPosition);
+            bulletDirections.Add(direction);
+        }
+
+        private static void UpdateBullets(float deltaTime)
+        {
+            for (int i = bulletPositions.Count - 1; i >= 0; i--)
+            {
+                bulletPositions[i] += bulletDirections[i] * bulletSpeed * deltaTime;
+
+                if (CalculateDistance(playerPosition, bulletPositions[i]) > bulletMaxDistance)
+                {
+                    bulletPositions.RemoveAt(i);
+                    bulletDirections.RemoveAt(i);
+                    continue;
+                }
+
+                for (int j = 0; j < AsteroidCount; j++)
+                {
+                    if (asteroidDestroyed[j]) continue;
+
+                    float distance = CalculateDistance(bulletPositions[i], asteroidPositions[j]);
+
+                    if (distance < bulletHitRadius)
+                    {
+                        destroyedCount++;
+                        ResetAsteroid(j);
+
+                        bulletPositions.RemoveAt(i);
+                        bulletDirections.RemoveAt(i);
+                        break;
+                    }
+                }
             }
         }
 
@@ -136,8 +203,7 @@ namespace GrafikaSzeminarium
         {
             if (firstPersonView)
             {
-                Vector3D<float> eye = playerPosition + new Vector3D<float>(0f, 2f, 0f);
-                Vector3D<float> look = new Vector3D<float>(MathF.Sin(playerRotationY), 0f, MathF.Cos(playerRotationY));
+                Vector3D<float> eye = playerPosition + new Vector3D<float>(0f, 2.2f, 0f);
 
                 cameraDescriptor.setCameraPosition(eye);
                 cameraDescriptor.Yaw = playerRotationY * 180f / MathF.PI - 90f;
@@ -145,7 +211,7 @@ namespace GrafikaSzeminarium
             }
             else
             {
-                cameraDescriptor.setCameraPosition(new Vector3D<float>(0f, 12f, 35f));
+                cameraDescriptor.setCameraPosition(playerPosition + new Vector3D<float>(0f, 15f, 40f));
                 cameraDescriptor.Yaw = -90f;
                 cameraDescriptor.Pitch = -20f;
             }
@@ -174,7 +240,7 @@ namespace GrafikaSzeminarium
 
                 asteroidPositions[i].Z += asteroidSpeeds[i] * deltaTime;
 
-                if (asteroidPositions[i].Z > 5f)
+                if (asteroidPositions[i].Z > 35f)
                     ResetAsteroid(i);
             }
         }
@@ -187,26 +253,32 @@ namespace GrafikaSzeminarium
                 random.Next(-120, -20)
             );
 
+            asteroidSpeeds[index] = 1f + (float)random.NextDouble() * 3f;
             asteroidDestroyed[index] = false;
         }
 
-        private static void CheckCollisions()
+        private static void CheckPlayerAsteroidCollision()
         {
             for (int i = 0; i < AsteroidCount; i++)
             {
                 if (asteroidDestroyed[i]) continue;
 
-                float dx = playerPosition.X - asteroidPositions[i].X;
-                float dz = playerPosition.Z - asteroidPositions[i].Z;
-                float dist = MathF.Sqrt(dx * dx + dz * dz);
+                float distance = CalculateDistance(playerPosition, asteroidPositions[i]);
 
-                if (dist < 5f)
+                if (distance < 6f)
                 {
-                    destroyedCount++;
-                    asteroidDestroyed[i] = true;
                     ResetAsteroid(i);
                 }
             }
+        }
+
+        private static float CalculateDistance(Vector3D<float> a, Vector3D<float> b)
+        {
+            float x = a.X - b.X;
+            float y = a.Y - b.Y;
+            float z = a.Z - b.Z;
+
+            return MathF.Sqrt(x * x + y * y + z * z);
         }
 
         private static unsafe void DrawPlayer()
@@ -228,9 +300,25 @@ namespace GrafikaSzeminarium
                 Matrix4X4<float> model =
                     Matrix4X4.CreateScale(5f) *
                     Matrix4X4.CreateRotationY(sceneTime + i) *
+                    Matrix4X4.CreateRotationX(sceneTime * 0.6f + i) *
                     Matrix4X4.CreateTranslation(asteroidPositions[i]);
 
                 DrawTexturedObject(asteroid, model);
+            }
+        }
+
+        private static unsafe void DrawBullets()
+        {
+            for (int i = 0; i < bulletPositions.Count; i++)
+            {
+                float bulletRotationY = MathF.Atan2(bulletDirections[i].X, bulletDirections[i].Z);
+
+                Matrix4X4<float> model =
+                    Matrix4X4.CreateScale(0.35f) *
+                    Matrix4X4.CreateRotationY(bulletRotationY) *
+                    Matrix4X4.CreateTranslation(bulletPositions[i]);
+
+                DrawTexturedObject(player, model);
             }
         }
 
@@ -240,19 +328,33 @@ namespace GrafikaSzeminarium
             SetModelMatrix(model);
 
             Gl.BindVertexArray(skyBox.Vao);
+
             int textureLocation = Gl.GetUniformLocation(program, TextureUniformVariableName);
             Gl.Uniform1(textureLocation, 0);
+
             Gl.ActiveTexture(TextureUnit.Texture0);
             Gl.BindTexture(TextureTarget.Texture2D, skyBox.Texture.Value);
+
             Gl.DrawElements(GLEnum.Triangles, skyBox.IndexArrayLength, GLEnum.UnsignedInt, null);
+
             Gl.BindVertexArray(0);
+            Gl.BindTexture(TextureTarget.Texture2D, 0);
         }
 
         private static void DrawGui()
         {
             ImGui.Begin("Space Shooter", ImGuiWindowFlags.AlwaysAutoResize);
+
             ImGui.Text($"Destroyed Asteroids: {destroyedCount}");
-            ImGui.Text("Controls: W A S D - move | C - switch camera");
+            ImGui.Text($"Bullets: {bulletPositions.Count}");
+            ImGui.Separator();
+            ImGui.Text("Controls:");
+            ImGui.Text("W A S D - move");
+            ImGui.Text("SPACE - shoot");
+            ImGui.Text("C - switch camera");
+            ImGui.Checkbox("Rocket camera", ref firstPersonView);
+            ImGui.SliderFloat("Rocket speed", ref playerSpeed, 0.1f, 1.2f);
+
             ImGui.End();
         }
 
@@ -260,56 +362,17 @@ namespace GrafikaSzeminarium
         {
             skyBox = GlCube.CreateInteriorCube(Gl, "space.png");
 
-            // player = ObjectResourceReader.CreateObjectWithTextureFromResource(
-            //   Gl, "Fighter_01.obj", "fighter.png");
             player = ObjectResourceReader.CreateObjectFromResource(
-               Gl,
-               "Fighter_01.obj"
-           );
+                Gl,
+                "Fighter_01.obj"
+            );
 
             asteroid = ObjectResourceReader.CreateObjectWithTextureFromResource(
-                Gl, "Asteroid_1.obj", "Asteroid_1_Diffuse_1K.png");
+                Gl,
+                "Asteroid_1.obj",
+                "Asteroid_1_Diffuse_1K.png"
+            );
         }
-
-        //private static unsafe void SetUpObjects()
-        //{
-        //    // Skybox
-        //    skyBox = GlCube.CreateInteriorCube(Gl, "space.png");
-
-        //    // Rakéta - középen, piros, textúra nélkül
-        //    player = ObjectResourceReader.CreateObjectFromResource(
-        //        Gl,
-        //        "Fighter_01.obj"
-        //    );
-        //    player.Position = new Vector3D<float>(0f, 0f, 0f);
-        //    player.Scale = 5f; // nagyobb méret a láthatósághoz
-
-        //    // Aszteroidák - több darab, eltérő pozícióval és mérettel
-        //    asteroid = ObjectResourceReader.CreateObjectWithTextureFromResource(
-        //        Gl,
-        //        "Asteroid_1.obj",
-        //        "Asteroid_1_Diffuse_1K.png"
-        //    );
-        //    asteroid.Position = new Vector3D<float>(20f, 10f, -50f); // messzebb, de látható
-        //    asteroid.Scale = 10f;
-
-        //    // Ha több aszteroida kell
-        //    asteroid2 = ObjectResourceReader.CreateObjectWithTextureFromResource(
-        //        Gl,
-        //        "Asteroid_1.obj",
-        //        "Asteroid_1_Diffuse_1K.png"
-        //    );
-        //    asteroid2.Position = new Vector3D<float>(-30f, 5f, -70f);
-        //    asteroid2.Scale = 8f;
-
-        //    asteroid3 = ObjectResourceReader.CreateObjectWithTextureFromResource(
-        //        Gl,
-        //        "Asteroid_1.obj",
-        //        "Asteroid_1_Diffuse_1K.png"
-        //    );
-        //    asteroid3.Position = new Vector3D<float>(15f, -20f, -60f);
-        //    asteroid3.Scale = 12f;
-        //}
 
         private static void Window_Closing()
         {
@@ -342,7 +405,6 @@ namespace GrafikaSzeminarium
             int location = Gl.GetUniformLocation(program, ModelMatrixVariableName);
             Gl.UniformMatrix4(location, 1, false, (float*)&modelMatrix);
 
-            // Normál mátrix egyszerűsített számítása: felső 3x3
             Matrix3X3<float> normalMatrix = new Matrix3X3<float>(
                 modelMatrix.Row1.X, modelMatrix.Row1.Y, modelMatrix.Row1.Z,
                 modelMatrix.Row2.X, modelMatrix.Row2.Y, modelMatrix.Row2.Z,
@@ -358,12 +420,15 @@ namespace GrafikaSzeminarium
         private static unsafe void SetViewMatrix()
         {
             Matrix4X4<float> viewMatrix =
-                Matrix4X4.CreateLookAt(cameraDescriptor.PositionInWorld,
-                                       cameraDescriptor.TargetInWorld,
-                                       cameraDescriptor.UpVector);
+                Matrix4X4.CreateLookAt(
+                    cameraDescriptor.PositionInWorld,
+                    cameraDescriptor.TargetInWorld,
+                    cameraDescriptor.UpVector
+                );
 
             int location = Gl.GetUniformLocation(program, ViewMatrixVariableName);
             Gl.UniformMatrix4(location, 1, false, (float*)&viewMatrix);
+
             CheckError();
         }
 
@@ -379,6 +444,7 @@ namespace GrafikaSzeminarium
 
             int location = Gl.GetUniformLocation(program, ProjectionMatrixVariableName);
             Gl.UniformMatrix4(location, 1, false, (float*)&projectionMatrix);
+
             CheckError();
         }
 
@@ -390,12 +456,14 @@ namespace GrafikaSzeminarium
             Gl.ShaderSource(vshader, ReadShader("VertexShader.vert"));
             Gl.CompileShader(vshader);
             Gl.GetShader(vshader, ShaderParameterName.CompileStatus, out int vStatus);
+
             if (vStatus != (int)GLEnum.True)
                 throw new Exception("Vertex shader failed: " + Gl.GetShaderInfoLog(vshader));
 
             Gl.ShaderSource(fshader, ReadShader("FragmentShader.frag"));
             Gl.CompileShader(fshader);
             Gl.GetShader(fshader, ShaderParameterName.CompileStatus, out int fStatus);
+
             if (fStatus != (int)GLEnum.True)
                 throw new Exception("Fragment shader failed: " + Gl.GetShaderInfoLog(fshader));
 
@@ -404,6 +472,7 @@ namespace GrafikaSzeminarium
             Gl.AttachShader(program, fshader);
             Gl.LinkProgram(program);
             Gl.GetProgram(program, GLEnum.LinkStatus, out int status);
+
             if (status == 0)
                 Console.WriteLine($"Error linking shader: {Gl.GetProgramInfoLog(program)}");
 
@@ -416,16 +485,22 @@ namespace GrafikaSzeminarium
         private static string ReadShader(string shaderFileName)
         {
             string fullResourceName = "GrafikaSzeminarium.Shaders." + shaderFileName;
-            using Stream shaderStream = typeof(Program).Assembly.GetManifestResourceStream(fullResourceName);
+
+            using Stream shaderStream =
+                typeof(Program).Assembly.GetManifestResourceStream(fullResourceName);
+
             if (shaderStream == null)
                 throw new Exception("Nem találom ezt a shader resource-t: " + fullResourceName);
+
             using StreamReader reader = new StreamReader(shaderStream);
+
             return reader.ReadToEnd();
         }
 
         public static void CheckError()
         {
             var error = (ErrorCode)Gl.GetError();
+
             if (error != ErrorCode.NoError)
                 throw new Exception("GL.GetError() returned " + error.ToString());
         }

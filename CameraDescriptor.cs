@@ -1,23 +1,51 @@
-﻿
-using Silk.NET.Maths;
+﻿using Silk.NET.Maths;
 
-namespace Szeminarium
+using System.Numerics;
+
+namespace GrafikaSzeminarium
 {
     internal class CameraDescriptor
     {
-        public double DistanceToOrigin { get; private set; } = 1;
+        private double DistanceToOrigin = 10;
 
-        public double AngleToZYPlane { get; private set; } = 0;
+        private double EnabledDistanceFromOrigin = 1300;
 
-        public double AngleToZXPlane { get; private set; } = 0;
+        public float SpeedFactor = 0.1f;
 
-        const double DistanceScaleFactor = 1.1;
+        private double AngleToZYPlane = 0;
 
-        const double AngleChangeStepSize = Math.PI / 180 * 5;
+        private double AngleToZXPlane = 0;
 
-        /// <summary>
-        /// Gets the position of the camera.
-        /// </summary>
+        private const double DistanceScaleFactor = 1.01;
+
+        private const double AngleChangeStepSize = Math.PI / 180;
+
+        // a jarkalashoz
+        private Vector3D<float> cameraPosition;
+        private double yaw = -90;
+        private double pitch = 0;
+
+        public CameraDescriptor(Vector3D<float> pos)
+        {
+            cameraPosition = pos;
+        }
+
+        public void setCameraPosition(Vector3D<float> newPos)
+        {
+            cameraPosition = newPos;
+        }
+
+        // a kamera upvectora mindig felfele y-ba mutat
+        public Vector3D<float> UpVector
+        {
+            get
+            {
+                return new Vector3D<float>(0f, 1f, 0f);
+            }
+        }
+
+
+        // ezt akkor hasznaljuk ha bevan pipalva hogy a kamera az origoba nez
         public Vector3D<float> Position
         {
             get
@@ -25,21 +53,6 @@ namespace Szeminarium
                 return GetPointFromAngles(DistanceToOrigin, AngleToZYPlane, AngleToZXPlane);
             }
         }
-
-        /// <summary>
-        /// Gets the up vector of the camera.
-        /// </summary>
-        public Vector3D<float> UpVector
-        {
-            get
-            {
-                return Vector3D.Normalize(GetPointFromAngles(DistanceToOrigin, AngleToZYPlane, AngleToZXPlane + Math.PI / 2));
-            }
-        }
-
-        /// <summary>
-        /// Gets the target point of the camera view.
-        /// </summary>
         public Vector3D<float> Target
         {
             get
@@ -47,6 +60,30 @@ namespace Szeminarium
                 // For the moment the camera is always pointed at the origin.
                 return Vector3D<float>.Zero;
             }
+        }
+
+
+
+        // eztet hasznaljuk ha nincs bepipalva hogy a kamera az origoba nez
+        public Vector3D<float> PositionInWorld
+        {
+            get
+            {
+                return cameraPosition;
+            }
+        }
+        // maskepp kell szamolni mert nem mindig az origoba nezunk itt
+        public Vector3D<float> TargetInWorld
+        {
+            get
+            {
+                return cameraPosition + GetCameraFront();
+            }
+        }
+
+        public Vector3D<float> RightVector
+        {
+            get { return Vector3D.Cross(GetCameraFront(), UpVector) * (SpeedFactor + 1f); }  // meg +1 kellett a SpeedFactorhoz mert hanem tul lassu volt
         }
 
         public void IncreaseZXAngle()
@@ -72,12 +109,73 @@ namespace Szeminarium
 
         public void IncreaseDistance()
         {
-            DistanceToOrigin = DistanceToOrigin * DistanceScaleFactor;
+            if (DistanceToOrigin + SpeedFactor < EnabledDistanceFromOrigin) DistanceToOrigin += SpeedFactor;
         }
 
         public void DecreaseDistance()
         {
-            DistanceToOrigin = DistanceToOrigin / DistanceScaleFactor;
+            if (DistanceToOrigin - SpeedFactor < EnabledDistanceFromOrigin)
+            {
+                // hogy ne lehessen annyir kozel menni hogy atforduljon
+                if (DistanceToOrigin - SpeedFactor < 0)
+                {
+                    DistanceToOrigin = 1;
+                }
+                else
+                {
+                    DistanceToOrigin -= SpeedFactor;
+                }
+            }
+        }
+
+        // a jarkalashoz kell
+        public double Yaw
+        {
+            get { return yaw; }
+            set { this.yaw = value; }
+        }
+
+        public double Pitch
+        {
+            get { return pitch; }
+            set { this.pitch = value; }
+        }
+
+        // korlatnak van hogy ne menjunk ki a skyboxbol
+        private double calculateDistanceFromOrigin(Vector3D<float> camerapoz)
+        {
+            return Vector3.Distance((Vector3)camerapoz, Vector3.Zero);
+        }
+
+        public void MoveBack()
+        {
+            // korlatnak van hogy ne menjunk ki a skyboxbol
+            if (calculateDistanceFromOrigin(cameraPosition - GetCameraFront()) < EnabledDistanceFromOrigin) cameraPosition -= GetCameraFront();
+        }
+
+        public void MoveFront()
+        {
+            if (calculateDistanceFromOrigin(cameraPosition + GetCameraFront()) < EnabledDistanceFromOrigin) cameraPosition += GetCameraFront();
+        }
+
+        public void MoveLeft()
+        {
+            if (calculateDistanceFromOrigin(cameraPosition - RightVector) < EnabledDistanceFromOrigin) cameraPosition -= RightVector;
+        }
+
+        public void MoveRight()
+        {
+            if (calculateDistanceFromOrigin(cameraPosition + RightVector) < EnabledDistanceFromOrigin) cameraPosition += RightVector;
+        }
+
+        public void GoDown()
+        {
+            if (calculateDistanceFromOrigin(cameraPosition - this.UpVector * SpeedFactor) < EnabledDistanceFromOrigin) cameraPosition -= this.UpVector * SpeedFactor;
+        }
+
+        public void GoUp()
+        {
+            if (calculateDistanceFromOrigin(cameraPosition + this.UpVector * SpeedFactor) < EnabledDistanceFromOrigin) cameraPosition += this.UpVector * SpeedFactor;
         }
 
         private static Vector3D<float> GetPointFromAngles(double distanceToOrigin, double angleToMinZYPlane, double angleToMinZXPlane)
@@ -87,6 +185,24 @@ namespace Szeminarium
             var y = distanceToOrigin * Math.Sin(angleToMinZXPlane);
 
             return new Vector3D<float>((float)x, (float)y, (float)z);
+        }
+
+        // visszateritti hova nez a kamera eleje
+        public Vector3D<float> GetCameraFront()
+        {
+            Vector3D<float> front;
+            front.X = MathF.Cos((float)yaw * (MathF.PI / 180)) * MathF.Cos((float)pitch * (MathF.PI / 180));
+            front.Y = MathF.Sin((float)pitch * (MathF.PI / 180));
+            front.Z = MathF.Sin((float)yaw * (MathF.PI / 180)) * MathF.Cos((float)pitch * (MathF.PI / 180));
+
+            front.X *= (float)SpeedFactor;
+            front.Y *= (float)SpeedFactor;
+            front.Z *= (float)SpeedFactor;
+
+            //return Vector3D.Normalize(front); // nem kell a normalizalas hogy mukodjon a sebesseg, mert jol kiszamolja
+            // a kamera merre nez a yaw es pitch fuggvenyeben es azt hozzaadjuk a cameraPositionhoz es akkor abba az iranyba
+            // megyunk, es ezt megskalaztuk es ugy lesz sebessegunk
+            return front;
         }
     }
 }

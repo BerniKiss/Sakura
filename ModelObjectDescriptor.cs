@@ -10,7 +10,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using Szeminarium;
+//using Szeminarium;
+
 
 namespace GrafikaSzeminarium
 {
@@ -377,10 +378,11 @@ namespace GrafikaSzeminarium
             foreach (var objVertex in objVertices)
             {
                 vertexTransformations.Add(new ObjVertexTransformationData(
-                    new Vector3D<float>(objVertex[0], objVertex[1], objVertex[2]),
-                    Vector3D<float>.Zero,
-                    0
-                    ));
+                new Vector3D<float>(objVertex[0], objVertex[1], objVertex[2]),
+                Vector3D<float>.Zero,
+                new Vector2D<float>(0f, 0f), // ha nincs textúra koordináta
+                0 // kezdő aggregatedFaceCount
+));
             }
 
             foreach (var objFace in objFaces)

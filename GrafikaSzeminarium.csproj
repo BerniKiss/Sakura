@@ -9,6 +9,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\bunny.obj" />
+    <None Remove="Resources\fur.jpg" />
+    <None Remove="Resources\grass.jpg" />
+    <None Remove="Resources\ground.obj" />
+    <None Remove="Resources\petal.png" />
+    <None Remove="Resources\sakura_tree.obj" />
     <None Remove="Resources\skybox.png" />
     <None Remove="Resources\teapot.obj" />
     <None Remove="Shaders\FragmentShader.frag" />
@@ -16,6 +22,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\bunny.obj" />
+    <EmbeddedResource Include="Resources\fur.jpg" />
+    <EmbeddedResource Include="Resources\grass.jpg" />
+    <EmbeddedResource Include="Resources\ground.obj" />
+    <EmbeddedResource Include="Resources\petal.png" />
+    <EmbeddedResource Include="Resources\sakura_tree.obj" />
     <EmbeddedResource Include="Resources\skybox.png" />
     <EmbeddedResource Include="Resources\teapot.obj" />
     <EmbeddedResource Include="Shaders\FragmentShader.frag" />

@@ -1,22 +1,26 @@
 ﻿using Silk.NET.Maths;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+//using Szeminarium;
 
-namespace Szeminarium
+namespace GrafikaSzeminarium
 {
     internal class ObjVertexTransformationData
     {
         public readonly Vector3D<float> Coordinates;
-
+        public readonly Vector2D<float> TextureCoords;  // Textúrakoordináták hozzáadása
         public Vector3D<float> Normal { get; private set; }
 
         private int aggregatedFaceCount;
 
-        public ObjVertexTransformationData(Vector3D<float> coordinates, Vector3D<float> initialNormal, int aggregatedFaceCount) {
+        public ObjVertexTransformationData(Vector3D<float> coordinates, Vector3D<float> initialNormal, Vector2D<float> textureCoords, int aggregatedFaceCount)
+        {
             this.Coordinates = coordinates;
+            this.TextureCoords = textureCoords;  // Inicializálás
             this.Normal = Vector3D.Normalize(initialNormal);
             this.aggregatedFaceCount = aggregatedFaceCount;
         }

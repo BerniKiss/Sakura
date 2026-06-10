@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Szeminarium
+﻿namespace naprendszer
 {
     internal class CubeArrangementModel
     {
         /// <summary>
         /// Gets or sets wheather the animation should run or it should be frozen.
         /// </summary>
-        public bool AnimationEnabled { get; set; } = false;
+        public bool AnimationEnabeld { get; set; } = false;
 
         /// <summary>
         /// The time of the simulation. It helps to calculate time dependent values.
@@ -26,17 +20,17 @@ namespace Szeminarium
         /// <summary>
         /// The angle with which the diamond cube is rotated around the diagonal from bottom right front to top left back.
         /// </summary>
-        public double DiamondCubeLocalAngle { get; private set; } = 0;
+        public double DiamondCubeAngleOwnRevolution { get; private set; } = 0;
 
         /// <summary>
-        /// The angle with which the diamond cube is rotated around the global Y axes.
+        /// The angle with which the diamond cube is rotated around the diagonal from bottom right front to top left back.
         /// </summary>
-        public double DiamondCubeGlobalYAngle { get; private set; } = 0;
+        public double DiamondCubeAngleRevolutionOnGlobalY { get; private set; } = 0;
 
         internal void AdvanceTime(double deltaTime)
         {
             // we do not advance the simulation when animation is stopped
-            if (!AnimationEnabled)
+            if (!AnimationEnabeld)
                 return;
 
             // set a simulation time
@@ -45,10 +39,9 @@ namespace Szeminarium
             // lets produce an oscillating scale in time
             CenterCubeScale = 1 + 0.2 * Math.Sin(1.5 * Time);
 
-            // the rotation angle is time x angular velocity;
-            DiamondCubeLocalAngle = Time * 10;
+            DiamondCubeAngleOwnRevolution = Time * 10;
 
-            DiamondCubeGlobalYAngle = -Time;
+            DiamondCubeAngleRevolutionOnGlobalY = -Time;
         }
     }
 }

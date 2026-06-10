@@ -12,7 +12,7 @@ namespace GrafikaSzeminarium
     internal class ObjVertexTransformationData
     {
         public readonly Vector3D<float> Coordinates;
-        public readonly Vector2D<float> TextureCoords;  // Textúrakoordináták hozzáadása
+        public readonly Vector2D<float> TextureCoords; 
         public Vector3D<float> Normal { get; private set; }
 
         private int aggregatedFaceCount;
@@ -20,7 +20,7 @@ namespace GrafikaSzeminarium
         public ObjVertexTransformationData(Vector3D<float> coordinates, Vector3D<float> initialNormal, Vector2D<float> textureCoords, int aggregatedFaceCount)
         {
             this.Coordinates = coordinates;
-            this.TextureCoords = textureCoords;  // Inicializálás
+            this.TextureCoords = textureCoords;
             this.Normal = Vector3D.Normalize(initialNormal);
             this.aggregatedFaceCount = aggregatedFaceCount;
         }

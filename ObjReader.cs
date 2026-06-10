@@ -15,7 +15,7 @@ namespace GrafikaSzeminarium
         public int normalsIndex;
     }
 
-    internal class ObjectResourceReader
+    internal class ObjReader
     {
         private static bool voltTextura = false;
         private static bool voltNormalis = false;
@@ -29,7 +29,7 @@ namespace GrafikaSzeminarium
             List<float[]> objTextureCoords = new List<float[]>();
 
             string fullResourceName = "GrafikaSzeminarium.Resources." + resourceName;
-            using (var objStream = typeof(ObjectResourceReader).Assembly.GetManifestResourceStream(fullResourceName))
+            using (var objStream = typeof(ObjReader).Assembly.GetManifestResourceStream(fullResourceName))
             using (var objReader = new StreamReader(objStream))
             {
                 while (!objReader.EndOfStream)
@@ -160,7 +160,7 @@ namespace GrafikaSzeminarium
             List<ObjFace[]> objFaces = new List<ObjFace[]>();
 
             string fullObjResourceName = "GrafikaSzeminarium.Resources." + objResourceName;
-            using (var objStream = typeof(ObjectResourceReader).Assembly.GetManifestResourceStream(fullObjResourceName))
+            using (var objStream = typeof(ObjReader).Assembly.GetManifestResourceStream(fullObjResourceName))
             using (var objReader = new StreamReader(objStream))
             {
                 while (!objReader.EndOfStream)
@@ -337,7 +337,7 @@ namespace GrafikaSzeminarium
         private static unsafe ImageResult ReadTextureImage(string textureResource)
         {
             string fullResourceName = "GrafikaSzeminarium.Resources." + textureResource;
-            using Stream stream = typeof(ObjectResourceReader).Assembly.GetManifestResourceStream(fullResourceName);
+            using Stream stream = typeof(ObjReader).Assembly.GetManifestResourceStream(fullResourceName);
             if (stream == null)
                 throw new Exception("Nem találom ezt a resource-t: " + fullResourceName);
             return ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);

@@ -24,6 +24,7 @@ namespace GrafikaSzeminarium
         private static SpaceBox skyBox;
         private static GlObject player;
         private static GlObject asteroid;
+        private static Star starObstacle;
 
         private static Vector3D<float> playerPosition = new Vector3D<float>(0f, 0f, 0f);
         private static float playerRotationY = MathF.PI;
@@ -34,6 +35,7 @@ namespace GrafikaSzeminarium
         private static float[] asteroidSpeeds = new float[AsteroidCount];
         private static bool[] asteroidDestroyed = new bool[AsteroidCount];
 
+        private static List<MovingObstacle> obstacles = new();
         private static List<Vector3D<float>> bulletPositions = new List<Vector3D<float>>();
         private static List<Vector3D<float>> bulletDirections = new List<Vector3D<float>>();
 
@@ -109,6 +111,27 @@ namespace GrafikaSzeminarium
             CheckPlayerAsteroidCollision();
             UpdateCamera();
 
+            foreach (var obstacle in obstacles)
+            {
+                obstacle.Update((float)deltaTime);
+
+                if (obstacle.CollidesWith(playerPosition, 5f))
+                {
+                    // reset player
+                    playerPosition = new Vector3D<float>(0f, 0f, 0f);
+
+                    // reset score
+                    destroyedCount = 0;
+
+                    // reset bullets
+                    bulletPositions.Clear();
+                    bulletDirections.Clear();
+
+                    // reset asteroids
+                    InitializeAsteroids();
+                }
+            }
+
             controller.Update((float)deltaTime);
         }
 
@@ -126,6 +149,7 @@ namespace GrafikaSzeminarium
             DrawAsteroids();
             DrawBullets();
             DrawPlayer();
+            DrawObstacles();
             DrawGui();
 
             controller.Render();
@@ -406,6 +430,18 @@ namespace GrafikaSzeminarium
             }
         }
 
+        private static unsafe void DrawObstacles()
+        {
+            foreach (var obs in obstacles)
+            {
+                Matrix4X4<float> model =
+                    Matrix4X4.CreateScale(3f) *
+                    Matrix4X4.CreateTranslation(obs.Position);
+
+                DrawTexturedObject(starObstacle, model);
+            }
+        }
+
         private static unsafe void DrawSkyBox()
         {
             Matrix4X4<float> model = Matrix4X4.CreateScale(3500f);
@@ -464,6 +500,22 @@ namespace GrafikaSzeminarium
                 "Asteroid_1.obj",
                 "Asteroid_1_Diffuse_1K.png"
             );
+
+            obstacles.Add(new MovingObstacle(
+            new Vector3D<float>(-30f, 0f, -40f),
+            20f,
+            12f));
+
+            obstacles.Add(new MovingObstacle(
+                new Vector3D<float>(25f, 10f, -70f),
+                15f,
+                8f));
+
+            obstacles.Add(new MovingObstacle(
+                new Vector3D<float>(0f, -8f, -100f),
+                30f,
+                15f));
+            starObstacle = Star.CreateStar(Gl);
         }
 
         private static void Window_Closing()

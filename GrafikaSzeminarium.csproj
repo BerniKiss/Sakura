@@ -12,6 +12,7 @@
     <None Remove="Resources\Asteroid_1.mtl" />
     <None Remove="Resources\Asteroid_1.obj" />
     <None Remove="Resources\bunny.obj" />
+    <None Remove="Resources\explosion.wav" />
     <None Remove="Resources\Fighter_01.mtl" />
     <None Remove="Resources\Fighter_01.obj" />
     <None Remove="Resources\fur.jpg" />
@@ -28,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\explosion.wav" />
     <EmbeddedResource Include="Resources\Fighter_01.mtl" />
   </ItemGroup>
 

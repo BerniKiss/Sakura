@@ -32,7 +32,7 @@ namespace GrafikaSzeminarium
         private static float playerRotationY = MathF.PI;
         private static float playerSpeed = 0.45f;
 
-        private const int AsteroidCount = 60;
+        private const int AsteroidCount = 40;
         private static Vector3D<float>[] asteroidPositions = new Vector3D<float>[AsteroidCount];
         private static float[] asteroidSpeeds = new float[AsteroidCount];
         private static bool[] asteroidDestroyed = new bool[AsteroidCount];
@@ -266,6 +266,8 @@ namespace GrafikaSzeminarium
                         destroyedCount++;
                         ResetAsteroid(j);
 
+                        PlayExplosionSound();
+
                         bulletPositions.RemoveAt(i);
                         bulletDirections.RemoveAt(i);
                         break;
@@ -314,8 +316,8 @@ namespace GrafikaSzeminarium
                 cameraDescriptor.setCameraPosition(eye);
 
                 // A  forgas
-                cameraDescriptor.HorizontalAngle = playerRotationY * 180f / MathF.PI - 90f;
-                cameraDescriptor.VerticalAngle = -5f;
+                cameraDescriptor.HorizontalAngle = - 90f;
+                cameraDescriptor.VerticalAngle = -18f;
             }
             else
             {
@@ -395,7 +397,7 @@ namespace GrafikaSzeminarium
         private static unsafe void DrawPlayer()
         {
             Matrix4X4<float> model =
-                Matrix4X4.CreateScale(3f) *
+                Matrix4X4.CreateScale(1.5f) *
                 Matrix4X4.CreateRotationY(playerRotationY) *
                 Matrix4X4.CreateTranslation(playerPosition);
 
@@ -655,6 +657,18 @@ namespace GrafikaSzeminarium
         {
             var stream = Assembly.GetExecutingAssembly()
                 .GetManifestResourceStream("GrafikaSzeminarium.Resources.shoot.wav");
+
+            if (stream != null)
+            {
+                SoundPlayer player = new SoundPlayer(stream);
+                player.Play();
+            }
+        }
+
+        private static void PlayExplosionSound()
+        {
+            var stream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("GrafikaSzeminarium.Resources.explosion.wav");
 
             if (stream != null)
             {

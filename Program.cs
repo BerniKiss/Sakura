@@ -449,6 +449,7 @@ namespace GrafikaSzeminarium
             ImGui.End();
         }
 
+        // csak komment 
         private static unsafe void SetUpObjects()
         {
             skyBox = GlCube.CreateInteriorCube(Gl, "space.png");

@@ -436,6 +436,7 @@ namespace GrafikaSzeminarium
             }
         }
 
+        
         private static unsafe void DrawObstacles()
         {
             foreach (var obs in obstacles)
@@ -677,4 +678,6 @@ namespace GrafikaSzeminarium
             }
         }
     }
+
+    
 }

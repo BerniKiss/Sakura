@@ -514,8 +514,8 @@ namespace GrafikaSzeminarium
         {
             Matrix4X4<float> viewMatrix =
                 Matrix4X4.CreateLookAt(
-                    cameraDescriptor.PositionInWorld,
-                    cameraDescriptor.TargetInWorld,
+                    cameraDescriptor.Position,
+                    cameraDescriptor.Target,
                     cameraDescriptor.UpVector
                 );
 

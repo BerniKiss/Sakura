@@ -391,6 +391,7 @@ namespace GrafikaSzeminarium
             }
         }
 
+        // ne felejtsd el
         private static unsafe void DrawBullets()
         {
             for (int i = 0; i < bulletPositions.Count; i++)

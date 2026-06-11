@@ -10,12 +10,11 @@ namespace GrafikaSzeminarium
 		}
 
 
-
+		// l;etrehoz egy kockat es belso oldalara helyezi a space.pngt
 		public static unsafe SpaceBox CreateInteriorCube(GL Gl, string textureResourceId) {
 			uint vao = Gl.GenVertexArray();
 			Gl.BindVertexArray(vao);
 
-			// counter clockwise is front facing
 			float[] vertexArray = new float[] {
                 // top face
                 -0.5f, 0.5f, 0.5f, 0f, -1f, 0f, 1f/4f, 0f/3f,
@@ -104,14 +103,12 @@ namespace GrafikaSzeminarium
 
 			var skyboxImageResult = ReadTextureImg("space.png");
 			var textureBytes = (ReadOnlySpan<byte>)skyboxImageResult.Data.AsSpan();
-			// Here we use "result.Width" and "result.Height" to tell OpenGL about how big our texture is.
 			Gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba, (uint)skyboxImageResult.Width,
 				(uint)skyboxImageResult.Height, 0, PixelFormat.Rgba, PixelType.UnsignedByte, textureBytes);
 			Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
 			Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
 			Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
 			Gl.TexParameterI(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Nearest);
-			// unbinde texture
 			Gl.BindTexture(TextureTarget.Texture2D, 0);
 
 			Gl.EnableVertexAttribArray(3);
@@ -122,7 +119,6 @@ namespace GrafikaSzeminarium
 			Gl.BindBuffer(GLEnum.ElementArrayBuffer, indices);
 			Gl.BufferData(GLEnum.ElementArrayBuffer, (ReadOnlySpan<uint>)indexArray.AsSpan(), GLEnum.StaticDraw);
 
-			// release array buffer
 			Gl.BindBuffer(GLEnum.ArrayBuffer, 0);
 			uint indexArrayLength = (uint)indexArray.Length;
 
@@ -137,7 +133,7 @@ namespace GrafikaSzeminarium
                 typeof(SpaceBox).Assembly.GetManifestResourceStream(fullResourceName);
 
             if (skyboxStream == null)
-                throw new Exception("Nem találom ezt a resource-t: " + fullResourceName);
+                throw new Exception("Nem talalom ezt a resource-t: " + fullResourceName);
 
             return ImageResult.FromStream(skyboxStream, ColorComponents.RedGreenBlueAlpha);
         }

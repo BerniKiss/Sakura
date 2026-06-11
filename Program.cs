@@ -496,12 +496,12 @@ namespace GrafikaSzeminarium
         {
             skyBox = SpaceBox.CreateInteriorCube(Gl, "space.png");
 
-            player = ObjReader.CreateObjectFromResource(
+            player = ObjReader.CreateRocket(
                 Gl,
                 "Fighter_01.obj"
             );
 
-            asteroid = ObjReader.CreateObjectWithTextureFromResource(
+            asteroid = ObjReader.CreateRocketWithTexture(
                 Gl,
                 "Asteroid_1.obj",
                 "Asteroid_1_Diffuse_1K.png"

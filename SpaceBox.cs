@@ -102,7 +102,7 @@ namespace GrafikaSzeminarium
 			// bind texture
 			Gl.BindTexture(TextureTarget.Texture2D, texture);
 
-			var skyboxImageResult = ReadTextureImage("space.png");
+			var skyboxImageResult = ReadTextureImg("space.png");
 			var textureBytes = (ReadOnlySpan<byte>)skyboxImageResult.Data.AsSpan();
 			// Here we use "result.Width" and "result.Height" to tell OpenGL about how big our texture is.
 			Gl.TexImage2D(TextureTarget.Texture2D, 0, InternalFormat.Rgba, (uint)skyboxImageResult.Width,
@@ -129,7 +129,7 @@ namespace GrafikaSzeminarium
 			return new SpaceBox(vao, vertices, colors, indices, indexArrayLength, Gl, texture);
 		}
 
-        private static unsafe ImageResult ReadTextureImage(string textureResource)
+        private static unsafe ImageResult ReadTextureImg(string textureResource)
         {
             string fullResourceName = "GrafikaSzeminarium.Resources." + textureResource;
 

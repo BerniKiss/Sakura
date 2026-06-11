@@ -21,8 +21,7 @@ namespace GrafikaSzeminarium
         private static bool voltNormalis = false;
         private static int osszesFaceDrb = 0;
 
-        // Javított CreateObjectFromResource
-        public static unsafe GlObject CreateObjectFromResource(GL Gl, string resourceName)
+        public static unsafe GlObject CreateRocket(GL Gl, string resourceName)
         {
             List<float[]> objVertices = new List<float[]>();
             List<float[]> objNormalVectors = new List<float[]>();
@@ -71,7 +70,7 @@ namespace GrafikaSzeminarium
                 }
             }
 
-            // Vertex + normal + UV kombinációk
+            // Vertex + normal + UV kombinacii
             List<ObjVertexTransformationData> vertexTransformations = new List<ObjVertexTransformationData>();
             Dictionary<string, int> vertexLookup = new Dictionary<string, int>();
             List<uint> indices = new List<uint>();
@@ -166,7 +165,7 @@ namespace GrafikaSzeminarium
             return new GlObject(vao, verticesBuffer, colors, indicesBuffer, (uint)indices.Count, Gl);
         }
 
-        public static unsafe GlObject CreateObjectWithTextureFromResource(GL Gl, string objResourceName, string fallbackTextureName, float[]? szin = null)
+        public static unsafe GlObject CreateRocketWithTexture(GL Gl, string objResourceName, string fallbackTextureName, float[]? szin = null)
         {
             voltNormalis = false;
             voltTextura = false;
@@ -243,7 +242,7 @@ namespace GrafikaSzeminarium
             ImageResult? imageResult = null;
             if (!string.IsNullOrEmpty(textureFile))
             {
-                imageResult = ReadTextureImage(textureFile);
+                imageResult = ReadTextureImg(textureFile);
             }
 
             List<ObjVertexTransformationData> vertexTransformations = new List<ObjVertexTransformationData>();
@@ -358,7 +357,7 @@ namespace GrafikaSzeminarium
             return new GlObject(vao, verticesBuffer, glColors.Count > 0 ? verticesBuffer : 0, indices, (uint)glIndexArray.Count, Gl, texture);
         }
 
-        private static unsafe ImageResult ReadTextureImage(string textureResource)
+        private static unsafe ImageResult ReadTextureImg(string textureResource)
         {
             string fullResourceName = "GrafikaSzeminarium.Resources." + textureResource;
             using Stream stream = typeof(ObjReader).Assembly.GetManifestResourceStream(fullResourceName);

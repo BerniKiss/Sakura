@@ -501,20 +501,18 @@ namespace GrafikaSzeminarium
                 "Asteroid_1_Diffuse_1K.png"
             );
 
-            obstacles.Add(new MovingObstacle(
-            new Vector3D<float>(-30f, 0f, -40f),
-            20f,
-            12f));
-
-            obstacles.Add(new MovingObstacle(
-                new Vector3D<float>(25f, 10f, -70f),
-                15f,
-                8f));
-
-            obstacles.Add(new MovingObstacle(
-                new Vector3D<float>(0f, -8f, -100f),
-                30f,
-                15f));
+            for (int i = 0; i < 8; i++)
+            {
+                obstacles.Add(new MovingObstacle(
+                    new Vector3D<float>(
+                        random.Next(-70, 70),
+                        random.Next(-25, 25),
+                        random.Next(-100, -20)
+                    ),
+                    random.Next(10, 30),
+                    random.Next(6, 16)
+                ));
+            }
             starObstacle = Star.CreateStar(Gl);
         }
 

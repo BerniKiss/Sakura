@@ -6,8 +6,8 @@ namespace GrafikaSzeminarium
     {
         private Vector3D<float> position;
 
-        public double Yaw { get; set; } = -90;
-        public double Pitch { get; set; } = 0;
+        public double HorizontalAngle { get; set; } = -90;
+        public double VerticalAngle { get; set; } = 0;
 
         public CameraDescriptor(Vector3D<float> startPosition)
         {
@@ -26,7 +26,7 @@ namespace GrafikaSzeminarium
 
         public Vector3D<float> Target
         {
-            get { return position + GetCameraFront(); }
+            get { return position + ComputeFrontVector(); }
         }
 
         public Vector3D<float> UpVector
@@ -34,19 +34,19 @@ namespace GrafikaSzeminarium
             get { return new Vector3D<float>(0f, 1f, 0f); }
         }
 
-        private Vector3D<float> GetCameraFront()
+        private Vector3D<float> ComputeFrontVector()
         {
-            Vector3D<float> front;
+            float radH = (float)(HorizontalAngle * MathF.PI / 180f);
+            float radV = (float)(VerticalAngle * MathF.PI / 180f);
 
-            front.X = MathF.Cos((float)Yaw * MathF.PI / 180f) *
-                      MathF.Cos((float)Pitch * MathF.PI / 180f);
+            Vector3D<float> frontVec = new Vector3D<float>
+            {
+                X = MathF.Cos(radH) * MathF.Cos(radV),
+                Y = MathF.Sin(radV),
+                Z = MathF.Sin(radH) * MathF.Cos(radV)
+            };
 
-            front.Y = MathF.Sin((float)Pitch * MathF.PI / 180f);
-
-            front.Z = MathF.Sin((float)Yaw * MathF.PI / 180f) *
-                      MathF.Cos((float)Pitch * MathF.PI / 180f);
-
-            return Vector3D.Normalize(front);
+            return Vector3D.Normalize(frontVec);
         }
     }
 }

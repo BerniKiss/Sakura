@@ -287,8 +287,8 @@ namespace GrafikaSzeminarium
                 cameraDescriptor.setCameraPosition(eye);
 
                 // A  forgas
-                cameraDescriptor.Yaw = playerRotationY * 180f / MathF.PI - 90f;
-                cameraDescriptor.Pitch = -5f;
+                cameraDescriptor.HorizontalAngle = playerRotationY * 180f / MathF.PI - 90f;
+                cameraDescriptor.VerticalAngle = -5f;
             }
             else
             {
@@ -296,8 +296,8 @@ namespace GrafikaSzeminarium
                 Vector3D<float> eye = playerPosition + new Vector3D<float>(0f, 15f, 40f);
                 cameraDescriptor.setCameraPosition(eye);
 
-                cameraDescriptor.Yaw = -90f;
-                cameraDescriptor.Pitch = -20f;
+                cameraDescriptor.HorizontalAngle = -90f;
+                cameraDescriptor.VerticalAngle = -20f;
             }
         }
 

@@ -21,7 +21,7 @@ namespace GrafikaSzeminarium
         private static CameraDescriptor cameraDescriptor =
             new CameraDescriptor(new Vector3D<float>(0f, 2f, 18f));
 
-        private static GlCube skyBox;
+        private static SpaceBox skyBox;
         private static GlObject player;
         private static GlObject asteroid;
 
@@ -156,7 +156,6 @@ namespace GrafikaSzeminarium
             if (keyboard.IsKeyPressed(Key.E))
                 movement.Y -= playerSpeed;
 
-            // Pozíció frissítése
             if (movement.X != 0f || movement.Y != 0f || movement.Z != 0f)
             {
                 playerPosition += movement;
@@ -166,7 +165,7 @@ namespace GrafikaSzeminarium
                 playerPosition.Z = Math.Clamp(playerPosition.Z, -90f, 30f);
             }
 
-            // Rakéta forgatás R gomb lenyomására
+            // rskewta forgatas
             if (keyboard.IsKeyPressed(Key.R))
             {
                 playerRotationY += 0.05f;
@@ -453,7 +452,7 @@ namespace GrafikaSzeminarium
         // csak komment 
         private static unsafe void SetUpObjects()
         {
-            skyBox = GlCube.CreateInteriorCube(Gl, "space.png");
+            skyBox = SpaceBox.CreateInteriorCube(Gl, "space.png");
 
             player = ObjReader.CreateObjectFromResource(
                 Gl,

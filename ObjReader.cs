@@ -21,12 +21,13 @@ namespace GrafikaSzeminarium
         private static bool voltNormalis = false;
         private static int osszesFaceDrb = 0;
 
+        // Javított CreateObjectFromResource
         public static unsafe GlObject CreateObjectFromResource(GL Gl, string resourceName)
         {
             List<float[]> objVertices = new List<float[]>();
-            List<int[]> objFaces = new List<int[]>();
             List<float[]> objNormalVectors = new List<float[]>();
             List<float[]> objTextureCoords = new List<float[]>();
+            List<ObjFace[]> objFaces = new List<ObjFace[]>();
 
             string fullResourceName = "GrafikaSzeminarium.Resources." + resourceName;
             using (var objStream = typeof(ObjReader).Assembly.GetManifestResourceStream(fullResourceName))
@@ -44,61 +45,69 @@ namespace GrafikaSzeminarium
                     switch (lineClassifier)
                     {
                         case "v":
-                            float[] vertex = new float[3];
-                            for (int i = 0; i < vertex.Length; ++i)
-                                vertex[i] = float.Parse(lineData[i], CultureInfo.InvariantCulture);
-                            objVertices.Add(vertex);
-                            break;
-                        case "f":
-                            int[] face = new int[lineData.Length];
-                            for (int i = 0; i < lineData.Length; i++)
-                            {
-                                string[] data;
-                                if (lineData[i].Contains("//") || lineData[i].Contains("/"))
-                                    data = lineData[i].Trim().Split(new string[] { "//", "/" }, StringSplitOptions.RemoveEmptyEntries);
-                                else
-                                    data = new string[] { lineData[i] };
-
-                                face[i] = int.Parse(data[0], CultureInfo.InvariantCulture);
-                            }
-
-                            // Triangulálás 4+ csúcsos polygonokhoz
-                            for (int i = 1; i < face.Length - 1; i++)
-                                objFaces.Add(new int[] { face[0], face[i], face[i + 1] });
+                            objVertices.Add(Array.ConvertAll(lineData, s => float.Parse(s, CultureInfo.InvariantCulture)));
                             break;
                         case "vn":
-                            float[] normalVektorok = new float[3];
-                            for (int i = 0; i < 3; ++i)
-                                normalVektorok[i] = float.Parse(lineData[i], CultureInfo.InvariantCulture);
-                            objNormalVectors.Add(normalVektorok);
+                            objNormalVectors.Add(Array.ConvertAll(lineData, s => float.Parse(s, CultureInfo.InvariantCulture)));
                             break;
                         case "vt":
-                            float[] texCoord = new float[2];
-                            for (int i = 0; i < 2; i++)
-                                texCoord[i] = float.Parse(lineData[i], CultureInfo.InvariantCulture);
-                            objTextureCoords.Add(texCoord);
+                            objTextureCoords.Add(Array.ConvertAll(lineData, s => float.Parse(s, CultureInfo.InvariantCulture)));
+                            break;
+                        case "f":
+                            List<ObjFace> face = new List<ObjFace>();
+                            for (int i = 0; i < lineData.Length; i++)
+                            {
+                                var data = lineData[i].Split(new string[] { "//", "/" }, StringSplitOptions.RemoveEmptyEntries);
+                                ObjFace f = new ObjFace();
+                                if (data.Length > 0) f.coordsIndex = int.Parse(data[0], CultureInfo.InvariantCulture) - 1;
+                                if (data.Length > 1) f.textureCoordsIndex = int.Parse(data[1], CultureInfo.InvariantCulture) - 1;
+                                if (data.Length > 2) f.normalsIndex = int.Parse(data[2], CultureInfo.InvariantCulture) - 1;
+                                face.Add(f);
+                            }
+                            for (int i = 1; i < face.Count - 1; i++)
+                                objFaces.Add(new ObjFace[] { face[0], face[i], face[i + 1] });
                             break;
                     }
                 }
             }
 
+            // Vertex + normal + UV kombinációk
             List<ObjVertexTransformationData> vertexTransformations = new List<ObjVertexTransformationData>();
-            for (int i = 0; i < objVertices.Count; i++)
-            {
-                Vector3D<float> normal = (objNormalVectors.Count > i)
-                    ? new Vector3D<float>(objNormalVectors[i][0], objNormalVectors[i][1], objNormalVectors[i][2])
-                    : Vector3D<float>.Zero;
+            Dictionary<string, int> vertexLookup = new Dictionary<string, int>();
+            List<uint> indices = new List<uint>();
 
-                vertexTransformations.Add(new ObjVertexTransformationData(
-                    new Vector3D<float>(objVertices[i][0], objVertices[i][1], objVertices[i][2]),
-                    normal,
-                    Vector2D<float>.Zero,
-                    0
-                ));
+            foreach (var tri in objFaces)
+            {
+                foreach (var v in tri)
+                {
+                    string key = $"{v.coordsIndex}/{v.textureCoordsIndex}/{v.normalsIndex}";
+                    if (!vertexLookup.TryGetValue(key, out int index))
+                    {
+                        var coords = new Vector3D<float>(
+                            objVertices[v.coordsIndex][0],
+                            objVertices[v.coordsIndex][1],
+                            objVertices[v.coordsIndex][2]
+                        );
+
+                        var normal = v.normalsIndex >= 0
+                            ? new Vector3D<float>(objNormalVectors[v.normalsIndex][0], objNormalVectors[v.normalsIndex][1], objNormalVectors[v.normalsIndex][2])
+                            : Vector3D<float>.Zero;
+
+                        var uv = v.textureCoordsIndex >= 0
+                            ? new Vector2D<float>(objTextureCoords[v.textureCoordsIndex][0], objTextureCoords[v.textureCoordsIndex][1])
+                            : Vector2D<float>.Zero;
+
+                        vertexTransformations.Add(new ObjVertexTransformationData(coords, normal, uv, 0));
+                        index = vertexTransformations.Count - 1;
+                        vertexLookup[key] = index;
+                    }
+                    indices.Add((uint)index);
+                }
             }
 
             List<float> glVertices = new List<float>();
             List<float> glColors = new List<float>();
+
             foreach (var vertex in vertexTransformations)
             {
                 glVertices.Add(vertex.Coordinates.X);
@@ -112,20 +121,21 @@ namespace GrafikaSzeminarium
                 glVertices.Add(vertex.TextureCoords.X);
                 glVertices.Add(vertex.TextureCoords.Y);
 
-                glColors.AddRange(new float[] { 1f, 0f, 0f, 1f }); // rakéta színe piros
+                glColors.AddRange(new float[] { 1f, 0f, 0f, 1f }); // piros szín
             }
-
-            List<uint> glIndexArray = new List<uint>();
-            for (uint i = 0; i < vertexTransformations.Count; i++)
-                glIndexArray.Add(i);
 
             uint vao = Gl.GenVertexArray();
             Gl.BindVertexArray(vao);
 
             uint vertexSize = 3 * sizeof(float) + 3 * sizeof(float) + 2 * sizeof(float);
+
             uint verticesBuffer = Gl.GenBuffer();
             Gl.BindBuffer(BufferTargetARB.ArrayBuffer, verticesBuffer);
-            Gl.BufferData<float>(BufferTargetARB.ArrayBuffer, glVertices.ToArray(), BufferUsageARB.StaticDraw);
+            Gl.BufferData<float>(
+                BufferTargetARB.ArrayBuffer,
+                glVertices.ToArray(),
+                BufferUsageARB.StaticDraw
+            );
             Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vertexSize, (void*)0);
             Gl.EnableVertexAttribArray(0);
             Gl.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, true, vertexSize, (void*)(3 * sizeof(float)));
@@ -135,18 +145,25 @@ namespace GrafikaSzeminarium
 
             uint colors = Gl.GenBuffer();
             Gl.BindBuffer(BufferTargetARB.ArrayBuffer, colors);
-            Gl.BufferData<float>(BufferTargetARB.ArrayBuffer, glColors.ToArray(), BufferUsageARB.StaticDraw);
+            Gl.BufferData<float>(
+                BufferTargetARB.ArrayBuffer,
+                glColors.ToArray(),
+                BufferUsageARB.StaticDraw
+            );
             Gl.VertexAttribPointer(1, 4, VertexAttribPointerType.Float, false, 0, null);
             Gl.EnableVertexAttribArray(1);
 
-            uint indices = Gl.GenBuffer();
-            Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, indices);
-            Gl.BufferData<uint>(BufferTargetARB.ElementArrayBuffer, glIndexArray.ToArray(), BufferUsageARB.StaticDraw);
-
-            Gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
+            uint indicesBuffer = Gl.GenBuffer();
+            Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, indicesBuffer);
+            Gl.BufferData<uint>(
+                BufferTargetARB.ElementArrayBuffer,
+                indices.ToArray(),
+                BufferUsageARB.StaticDraw
+            );
             Gl.BindVertexArray(0);
+            Gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
 
-            return new GlObject(vao, verticesBuffer, colors, indices, (uint)glIndexArray.Count, Gl);
+            return new GlObject(vao, verticesBuffer, colors, indicesBuffer, (uint)indices.Count, Gl);
         }
 
         public static unsafe GlObject CreateObjectWithTextureFromResource(GL Gl, string objResourceName, string fallbackTextureName, float[]? szin = null)
@@ -290,7 +307,11 @@ namespace GrafikaSzeminarium
             uint vertexSize = 3 * sizeof(float) + 3 * sizeof(float) + 2 * sizeof(float);
             uint verticesBuffer = Gl.GenBuffer();
             Gl.BindBuffer(BufferTargetARB.ArrayBuffer, verticesBuffer);
-            Gl.BufferData<float>(BufferTargetARB.ArrayBuffer, glVertices.ToArray(), BufferUsageARB.StaticDraw);
+            Gl.BufferData<float>(
+                BufferTargetARB.ArrayBuffer,
+                glVertices.ToArray(),
+                BufferUsageARB.StaticDraw
+            );
             Gl.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, vertexSize, (void*)0);
             Gl.EnableVertexAttribArray(0);
             Gl.VertexAttribPointer(2, 3, VertexAttribPointerType.Float, true, vertexSize, (void*)(3 * sizeof(float)));
@@ -326,8 +347,11 @@ namespace GrafikaSzeminarium
 
             uint indices = Gl.GenBuffer();
             Gl.BindBuffer(BufferTargetARB.ElementArrayBuffer, indices);
-            Gl.BufferData<uint>(BufferTargetARB.ElementArrayBuffer, glIndexArray.ToArray(), BufferUsageARB.StaticDraw);
-
+            Gl.BufferData<uint>(
+                BufferTargetARB.ElementArrayBuffer,
+                (ReadOnlySpan<uint>)glIndexArray.ToArray().AsSpan(),
+                BufferUsageARB.StaticDraw
+            );
             Gl.BindBuffer(BufferTargetARB.ArrayBuffer, 0);
             Gl.BindVertexArray(0);
 

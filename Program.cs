@@ -161,25 +161,25 @@ namespace GrafikaSzeminarium
         {
             Vector3D<float> movement = Vector3D<float>.Zero;
 
-            // W/S: előre-hátra
+            // W/S: elor hatra
             if (keyboard.IsKeyPressed(Key.W))
                 movement.Z -= playerSpeed;
 
             if (keyboard.IsKeyPressed(Key.S))
                 movement.Z += playerSpeed;
 
-            // A/D: oldalirányú mozgás (nem forgatjuk)
+            // A/D: odlalra
             if (keyboard.IsKeyPressed(Key.A))
                 movement.X -= playerSpeed;
 
             if (keyboard.IsKeyPressed(Key.D))
                 movement.X += playerSpeed;
 
-            // Q/E: fel-le
-            if (keyboard.IsKeyPressed(Key.Q))
+            // nyilak: fel-le
+            if (keyboard.IsKeyPressed(Key.Up))
                 movement.Y += playerSpeed;
 
-            if (keyboard.IsKeyPressed(Key.E))
+            if (keyboard.IsKeyPressed(Key.Down))
                 movement.Y -= playerSpeed;
 
             if (movement.X != 0f || movement.Y != 0f || movement.Z != 0f)
@@ -481,7 +481,7 @@ namespace GrafikaSzeminarium
 
             ImGui.BulletText("W / S - Forward / Backward");
             ImGui.BulletText("A / D - Left / Right");
-            ImGui.BulletText("Q / E - Up / Down");
+            ImGui.BulletText("↑ / ↓ - Up / Down");
             ImGui.BulletText("R - Rotate spaceship");
             ImGui.BulletText("SPACE - Shoot");
             ImGui.BulletText("C - Switch camera");

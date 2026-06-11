@@ -343,4 +343,35 @@ namespace GrafikaSzeminarium
             return ImageResult.FromStream(stream, ColorComponents.RedGreenBlueAlpha);
         }
     }
+
+    internal class GlObject
+    {
+        public uint? Texture { get; private set; }
+        public uint Vao { get; }
+        public uint Vertices { get; }
+        public uint Colors { get; }
+        public uint Indices { get; }
+        public uint IndexArrayLength { get; }
+
+        private GL Gl;
+
+        public GlObject(uint vao, uint vertices, uint colors, uint indeces, uint indexArrayLength, GL gl, uint texture = 0)
+        {
+            Vao = vao;
+            Vertices = vertices;
+            Colors = colors;
+            Indices = indeces;
+            IndexArrayLength = indexArrayLength;
+            Gl = gl;
+            Texture = texture;
+        }
+
+        internal void ReleaseGlObject()
+        {
+            Gl.DeleteBuffer(Vertices);
+            Gl.DeleteBuffer(Colors);
+            Gl.DeleteBuffer(Indices);
+            Gl.DeleteVertexArray(Vao);
+        }
+    }
 }

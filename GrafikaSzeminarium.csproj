@@ -19,6 +19,7 @@
     <None Remove="Resources\ground.obj" />
     <None Remove="Resources\petal.png" />
     <None Remove="Resources\sakura_tree.obj" />
+    <None Remove="Resources\shoot.wav" />
     <None Remove="Resources\skybox.png" />
     <None Remove="Resources\space.png" />
     <None Remove="Resources\teapot.obj" />
@@ -35,6 +36,7 @@
     <EmbeddedResource Include="Resources\Asteroid_1.obj" />
 	<EmbeddedResource Include="Resources\Asteroid_1_Diffuse_1K.png" />
     <EmbeddedResource Include="Resources\Fighter_01.obj" />
+    <EmbeddedResource Include="Resources\shoot.wav" />
     <EmbeddedResource Include="Resources\space.png" />
     <EmbeddedResource Include="Resources\teapot.obj" />
     <EmbeddedResource Include="Shaders\FragmentShader.frag" />
@@ -45,6 +47,7 @@
     <PackageReference Include="Silk.NET" Version="2.22.0" />
     <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0" />
     <PackageReference Include="StbImageSharp" Version="2.30.15" />
+    <PackageReference Include="System.Windows.Extensions" Version="10.0.9" />
   </ItemGroup>
 
 </Project>

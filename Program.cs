@@ -7,7 +7,9 @@ using Silk.NET.Windowing;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Media;
 
+using System.Reflection;
 namespace GrafikaSzeminarium
 {
     internal static class Program
@@ -229,6 +231,8 @@ namespace GrafikaSzeminarium
 
             bulletPositions.Add(startPosition);
             bulletDirections.Add(direction);
+
+            PlayShootSound();
         }
 
         private static void UpdateBullets(float deltaTime)
@@ -645,6 +649,18 @@ namespace GrafikaSzeminarium
 
             if (error != ErrorCode.NoError)
                 throw new Exception("GL.GetError() returned " + error.ToString());
+        }
+
+        private static void PlayShootSound()
+        {
+            var stream = Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("GrafikaSzeminarium.Resources.shoot.wav");
+
+            if (stream != null)
+            {
+                SoundPlayer player = new SoundPlayer(stream);
+                player.Play();
+            }
         }
     }
 }
